@@ -126,13 +126,16 @@ func getDeterministicGuid(relativeFilePath string) string {
 	return hex.EncodeToString(hash[:])
 }
 
-func GeneratePackage(assetsRoot, outputPath, tempMd5Path, tempPath string) error {
+func GeneratePackage(assetsRoot, outputPath, tempPath string) error {
 	assetsRoot = filepath.Clean(assetsRoot)
 	outputPath = filepath.Clean(outputPath)
-	tempMd5Path = filepath.Clean(tempMd5Path)
 	tempPath = filepath.Clean(tempPath)
 	os.RemoveAll(tempPath)
 	if err := os.MkdirAll(tempPath, 0777); err != nil {
+		return err
+	}
+
+	if err := os.MkdirAll(filepath.Dir(outputPath), 0777); err != nil {
 		return err
 	}
 
