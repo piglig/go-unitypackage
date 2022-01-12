@@ -13,9 +13,6 @@ import (
 	"strings"
 )
 
-// UnPackage extract unitypackage content
-// packagePath is unitypackage file path, output is extract content storage path,
-// tempPath is temp path for deal with unitypackage
 func UnPackage(packagePath, output, tempPath string) error {
 	packagePath = filepath.Clean(packagePath)
 	output = filepath.Clean(output)
@@ -33,11 +30,9 @@ func UnPackage(packagePath, output, tempPath string) error {
 
 	tempDir, err := extractAll(packagePath, tempPath)
 	if err != nil {
-		fmt.Println("000000 err", err)
+		fmt.Println("extractAll err", err)
 		return err
 	}
-
-	fmt.Println(tempDir)
 
 	dirs, err := ioutil.ReadDir(tempDir)
 	if err != nil {
@@ -58,7 +53,7 @@ func UnPackage(packagePath, output, tempPath string) error {
 
 			pathNameByte, err := ioutil.ReadFile(pathNameFilePath)
 			if err != nil {
-				fmt.Println("11111111111 err", err)
+				fmt.Println("UnPackage ioutil.ReadFile err", err)
 				return err
 			}
 
@@ -75,15 +70,14 @@ func UnPackage(packagePath, output, tempPath string) error {
 				if os.IsNotExist(err) {
 					err = os.MkdirAll(fp, 0777)
 					if err != nil {
-						fmt.Println("222222222222 err", err)
+						fmt.Println("UnPackage os.MkdirAll err", err)
 						return err
 					}
 				}
 			}
 
-			err = MoveFile(assetFilePath, outputParent)
-			if err != nil {
-				fmt.Println("33333333 err", err)
+			if err = MoveFile(assetFilePath, outputParent); err != nil {
+				fmt.Println("UnPackage MoveFile err", err)
 				return err
 			}
 		}
@@ -119,10 +113,6 @@ func MoveFile(sourcePath, destPath string) error {
 // Untar takes a destination path and a reader; a tar reader loops over the tarfile
 // creating the file structure at 'dst' along the way, and writing any files
 func extractAll(unityPackagePath, outputPath string) (string, error) {
-	//tempDir, err := ioutil.TempDir("", "temp-unpackages")
-	//if err != nil {
-	//	return "", err
-	//}
 	unityPackage, err := os.Open(unityPackagePath)
 	if err != nil {
 		return "", err
@@ -147,7 +137,7 @@ func extractAll(unityPackagePath, outputPath string) (string, error) {
 
 		// return any other error
 		case err != nil:
-			fmt.Println("1111111", err)
+			fmt.Println("extractAll err", err)
 			return "", err
 
 		// if the header is nil, just skip it (not sure how this happens)
@@ -156,6 +146,7 @@ func extractAll(unityPackagePath, outputPath string) (string, error) {
 		}
 
 		// the target location where the dir/file should be created
+		header.Name = filepath.Clean(header.Name)
 		target := header.Name
 		absFlag := true
 		if !filepath.IsAbs(header.Name) {
@@ -166,10 +157,6 @@ func extractAll(unityPackagePath, outputPath string) (string, error) {
 
 		fmt.Println("target:", target, "header: ", header.Name)
 
-		// the following switch could also be done using fi.Mode(), not sure if there
-		// a benefit of using one vs. the other.
-		// fi := header.FileInfo()
-
 		// check the file type
 		switch header.Typeflag {
 
@@ -177,7 +164,7 @@ func extractAll(unityPackagePath, outputPath string) (string, error) {
 		case tar.TypeDir:
 			if _, err := os.Stat(target); err != nil {
 				if err := os.MkdirAll(target, 0755); err != nil {
-					fmt.Println("2222222", err)
+					fmt.Println("extractAll tar.TypeDir", err)
 					return "", err
 				}
 			}
@@ -186,7 +173,7 @@ func extractAll(unityPackagePath, outputPath string) (string, error) {
 		case tar.TypeReg:
 			f, err := os.OpenFile(target, os.O_CREATE|os.O_RDWR, os.FileMode(header.Mode))
 			if err != nil {
-				fmt.Println("333333", err)
+				fmt.Println("extractAll tar.TypeReg", err)
 				return "", err
 			}
 
@@ -202,18 +189,18 @@ func extractAll(unityPackagePath, outputPath string) (string, error) {
 
 				if _, err := os.Stat(outputDir); err != nil {
 					if err := os.MkdirAll(outputDir, 0755); err != nil {
-						fmt.Println("77777", err)
+						fmt.Println("extractAll tar.TypeReg os.MkdirAll", err)
 						return "", err
 					}
 				}
 				if err = CopyFile(target, tempOutput); err != nil {
-					fmt.Println(err)
+					fmt.Println("extractAll tar.TypeReg CopyFile", err)
 					return "", err
 				}
 			} else {
 				// copy over contents
 				if _, err := io.Copy(f, tr); err != nil {
-					fmt.Println("44444444", err)
+					fmt.Println("extractAll tar.TypeReg io.Copy", err)
 					return "", err
 				}
 			}
