@@ -53,12 +53,16 @@ func preProcessFilesInPath(assetsRoot, relativePath string) error {
 		}
 
 		if info.IsDir() {
-			preProcessFilesInPath(assetsRoot, childRelativePath)
+			if err = preProcessFilesInPath(assetsRoot, childRelativePath); err != nil {
+				return err
+			}
 		} else {
 			if strings.HasSuffix(assetsRoot, childRelativePath) {
 				continue
 			} else {
-				processFile(assetsRoot, childRelativePath)
+				if err = processFile(assetsRoot, childRelativePath); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -164,7 +168,7 @@ func GeneratePackage(assetsRoot, outputPath, tempPath string) error {
 		}
 
 		// 用 unity 相对路径 Assets/... 代替根路径
-		const DefaultUnityRootPath = "Assets/"
+
 		pathNameLocal = filepath.Join(localBaseName, pathNameLocal)
 		pathNameLocal = strings.ReplaceAll(pathNameLocal, "\\", "/")
 
@@ -274,7 +278,9 @@ func TarGz(outFilePath string, inPath string) error {
 	tw := tar.NewWriter(gw)
 	defer tw.Close()
 
-	IterDirectory(inPath, tw)
+	if err = IterDirectory(inPath, tw); err != nil {
+		return err
+	}
 	return err
 }
 
