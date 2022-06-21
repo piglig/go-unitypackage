@@ -4,16 +4,15 @@ import (
 	"archive/tar"
 	"compress/gzip"
 	"crypto/md5"
+	_ "embed"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 )
 
 type MetaFile struct {
@@ -22,14 +21,12 @@ type MetaFile struct {
 	MetaPath string `yaml:"-"`
 }
 
-func PreprocessAssets(assetsRoot string) {
-	preProcessFilesInPath(assetsRoot, "./")
+func PreprocessAssets(assetsRoot string) error {
+	return preProcessFilesInPath(assetsRoot, "./")
 }
 
 func preProcessFilesInPath(assetsRoot, relativePath string) error {
 	assetPath := filepath.Join(assetsRoot, relativePath)
-
-	fmt.Println("Process files in directory: ", assetPath)
 
 	// 处理根目录
 	if err := processFile(assetsRoot, relativePath); err != nil {
@@ -71,7 +68,6 @@ func preProcessFilesInPath(assetsRoot, relativePath string) error {
 }
 
 func processFile(assetsRoot, relativeFilePath string) error {
-	fmt.Println("processFile: ", relativeFilePath)
 	fullFilePath := filepath.Join(assetsRoot, relativeFilePath)
 
 	fullMetaFilePath := getAssetMetaPath(fullFilePath)
@@ -97,32 +93,23 @@ func getAssetMetaPath(filePath string) string {
 	return filePath + ".meta"
 }
 
-func generateMetafile(fullMetaFilePath, relativeFilePath string) error {
-	fmt.Println("generateMetaFile at", fullMetaFilePath)
+//go:embed metafile_template.yaml
+var data []byte
 
-	contents, err := getMetafileTemplatePath()
-	if err != nil {
-		return err
-	}
+func generateMetafile(fullMetaFilePath, relativeFilePath string) error {
+	temp := make([]byte, len(data))
+	copy(temp, data)
+
+	contents := string(temp)
 
 	contents = strings.ReplaceAll(contents, "{guid}", getDeterministicGuid(relativeFilePath))
-	contents = strings.ReplaceAll(contents, "{timeCreated}", fmt.Sprintf("%d", time.Now().Unix()))
 
-	err = ioutil.WriteFile(fullMetaFilePath, []byte(contents), 0755)
+	err := ioutil.WriteFile(fullMetaFilePath, []byte(contents), 0755)
 	if err != nil {
 		return err
 	}
 
 	return nil
-}
-
-func getMetafileTemplatePath() (string, error) {
-	content, err := os.ReadFile("./utils/metafile_template.yaml")
-	if err != nil {
-		return "", err
-	}
-
-	return string(content), nil
 }
 
 func getDeterministicGuid(relativeFilePath string) string {
@@ -133,12 +120,7 @@ func getDeterministicGuid(relativeFilePath string) string {
 func GeneratePackage(assetsRoot, outputPath, tempPath string) error {
 	assetsRoot = filepath.Clean(assetsRoot)
 	outputPath = filepath.Clean(outputPath)
-	tempPath = filepath.Clean(tempPath)
-	os.RemoveAll(tempPath)
-	if err := os.MkdirAll(tempPath, 0777); err != nil {
-		return err
-	}
-
+	os.Remove(outputPath)
 	if err := os.MkdirAll(filepath.Dir(outputPath), 0777); err != nil {
 		return err
 	}
@@ -155,7 +137,6 @@ func GeneratePackage(assetsRoot, outputPath, tempPath string) error {
 			continue
 		}
 
-		fmt.Println("GeneratePackage asset", asset.Path)
 		assetDir := filepath.Join(tempPath, asset.Guid)
 		assetPath := filepath.Join(assetDir, "asset")
 		metaPath := filepath.Join(assetDir, "asset.meta")
@@ -168,7 +149,7 @@ func GeneratePackage(assetsRoot, outputPath, tempPath string) error {
 		}
 
 		// 用 unity 相对路径 Assets/... 代替根路径
-
+		const DefaultUnityRootPath = "Assets/"
 		pathNameLocal = filepath.Join(localBaseName, pathNameLocal)
 		pathNameLocal = strings.ReplaceAll(pathNameLocal, "\\", "/")
 
@@ -196,7 +177,6 @@ func GeneratePackage(assetsRoot, outputPath, tempPath string) error {
 			return err
 		}
 
-		fmt.Println("pathNamePath", pathNamePath, "content:", pathNameLocal)
 		if err = os.WriteFile(pathNamePath, []byte(pathNameLocal), 0777); err != nil {
 			return err
 		}
@@ -209,7 +189,14 @@ func GeneratePackage(assetsRoot, outputPath, tempPath string) error {
 	return nil
 }
 
-func TarGzWrite(_path string, tw *tar.Writer, fi os.FileInfo) error {
+func TarGzWrite(_path, rootPath string, tw *tar.Writer, fi os.FileInfo) error {
+	_path = filepath.Clean(_path)
+	rootPath = filepath.Clean(rootPath)
+	relativePath, err := filepath.Rel(rootPath, _path)
+	if err != nil {
+		return err
+	}
+
 	fr, err := os.Open(_path)
 	if err != nil {
 		return err
@@ -217,7 +204,7 @@ func TarGzWrite(_path string, tw *tar.Writer, fi os.FileInfo) error {
 	defer fr.Close()
 
 	h := new(tar.Header)
-	h.Name = _path
+	h.Name = relativePath
 	h.Size = fi.Size()
 	h.Mode = int64(fi.Mode())
 	h.ModTime = fi.ModTime()
@@ -234,7 +221,7 @@ func TarGzWrite(_path string, tw *tar.Writer, fi os.FileInfo) error {
 	return nil
 }
 
-func IterDirectory(dirPath string, tw *tar.Writer) error {
+func IterDirectory(rootPath, dirPath string, tw *tar.Writer) error {
 	dir, err := os.Open(dirPath)
 	if err != nil {
 		return err
@@ -249,11 +236,14 @@ func IterDirectory(dirPath string, tw *tar.Writer) error {
 		curPath := dirPath + "/" + fi.Name()
 
 		if fi.IsDir() {
-			if err = IterDirectory(curPath, tw); err != nil {
+			if err = tarHeader(rootPath, curPath, tw); err != nil {
+				return err
+			}
+			if err = IterDirectory(rootPath, curPath, tw); err != nil {
 				return err
 			}
 		} else {
-			if err = TarGzWrite(curPath, tw, fi); err != nil {
+			if err = TarGzWrite(curPath, rootPath, tw, fi); err != nil {
 				return err
 			}
 		}
@@ -278,10 +268,46 @@ func TarGz(outFilePath string, inPath string) error {
 	tw := tar.NewWriter(gw)
 	defer tw.Close()
 
-	if err = IterDirectory(inPath, tw); err != nil {
+	//re, err := filepath.Rel(inPath, inPath)
+	//if err != nil {
+	//	return err
+	//}
+	//fmt.Println(re)
+
+	if err = tarHeader(inPath, inPath, tw); err != nil {
+		return err
+	}
+
+	if err = IterDirectory(inPath, inPath, tw); err != nil {
 		return err
 	}
 	return err
+}
+
+func tarHeader(basePath, path string, tw *tar.Writer) error {
+	// 获取文件或目录信息
+	fi, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+	relativePath, err := filepath.Rel(basePath, path)
+	if err != nil {
+		return err
+	}
+
+	if len(relativePath) > 0 {
+		hdr, err := tar.FileInfoHeader(fi, "")
+		if err != nil {
+			return err
+		}
+
+		hdr.Name = relativePath
+		if err = tw.WriteHeader(hdr); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func isDir(path string) bool {
@@ -303,7 +329,6 @@ func collectAssetsInPath(assetPath string) ([]MetaFile, error) {
 
 	assetRef, err := getAssetReference(assetPath)
 	if err == nil && assetRef != nil {
-		fmt.Println("Adding asset ref ", assetRef)
 		assets = append(assets, *assetRef)
 	}
 
@@ -314,7 +339,6 @@ func collectAssetsInPath(assetPath string) ([]MetaFile, error) {
 
 	for _, dir := range dirs {
 		fullPath := filepath.Join(assetPath, dir.Name())
-		fmt.Println(fullPath)
 
 		info, err := os.Stat(fullPath)
 		if err != nil {
@@ -332,7 +356,6 @@ func collectAssetsInPath(assetPath string) ([]MetaFile, error) {
 		} else {
 			assetRef, err = getAssetReference(fullPath)
 			if err == nil && assetRef != nil {
-				fmt.Println("Adding asset ref ", assetRef)
 				assets = append(assets, *assetRef)
 			}
 		}
@@ -369,7 +392,8 @@ func getAssetReference(filePath string) (*MetaFile, error) {
 	}
 }
 
-// copyFile 文件拷贝
+// copyFile the src file to dst. Any existing file will be overwritten and will not
+// copy file attributes.
 func copyFile(src, dst string) error {
 	in, err := os.Open(src)
 	if err != nil {

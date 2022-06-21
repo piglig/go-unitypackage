@@ -15,18 +15,18 @@ import (
 
 func UnPackage(packagePath, output, tempPath string) error {
 	packagePath = filepath.Clean(packagePath)
-	output = filepath.Clean(output)
-	tempPath = filepath.Clean(tempPath)
-
-	os.RemoveAll(output)
-	if err := os.MkdirAll(output, 0777); err != nil {
-		return err
-	}
-
-	os.RemoveAll(tempPath)
-	if err := os.MkdirAll(tempPath, 0777); err != nil {
-		return err
-	}
+	// output = filepath.Clean(output)
+	// tempPath = filepath.Clean(tempPath)
+	//
+	// os.RemoveAll(output)
+	// if err := os.MkdirAll(output, 0777); err != nil {
+	// 	return err
+	// }
+	//
+	// os.RemoveAll(tempPath)
+	// if err := os.MkdirAll(tempPath, 0777); err != nil {
+	// 	return err
+	// }
 
 	tempDir, err := extractAll(packagePath, tempPath)
 	if err != nil {
@@ -41,12 +41,23 @@ func UnPackage(packagePath, output, tempPath string) error {
 
 	for _, dir := range dirs {
 		if dir.IsDir() {
-			pathNameFilePath := filepath.Join(tempDir, dir.Name(), "pathname")
+			pathNameFilePath := filepath.Join(tempDir, dir.Name())
+			assetFilePath := pathNameFilePath
+			if runtime.GOOS == "windows" {
+				pathNameFilePath = filepath.Join(pathNameFilePath, "pathname")
+			} else {
+				pathNameFilePath = filepath.Join(pathNameFilePath, "pathname")
+			}
+
 			if _, err = os.Stat(pathNameFilePath); err != nil {
 				continue
 			}
 
-			assetFilePath := filepath.Join(tempDir, dir.Name(), "asset")
+			if runtime.GOOS == "windows" {
+				assetFilePath = filepath.Join(assetFilePath, "asset")
+			} else {
+				assetFilePath = filepath.Join(assetFilePath, "asset")
+			}
 			if _, err = os.Stat(assetFilePath); err != nil {
 				continue
 			}
