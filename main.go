@@ -28,15 +28,14 @@ func main() {
 		return
 	}
 
-	assetDir := filepath.Join(unpackageDir, "Assets")
-	if err = utils.PreprocessAssets(assetDir); err != nil {
+	if err = utils.PreprocessAssets(unpackageDir); err != nil {
 		fmt.Println(err)
 		return
 	}
 
 	name := filepath.Base(fileName)
 	output := packageDir + name
-	if err = utils.GeneratePackage(assetDir,
+	if err = utils.GeneratePackage(unpackageDir,
 		output); err != nil {
 		fmt.Println(err)
 		return
