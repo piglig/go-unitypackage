@@ -117,7 +117,7 @@ func getDeterministicGuid(relativeFilePath string) string {
 	return hex.EncodeToString(hash[:])
 }
 
-func GeneratePackage(assetsRoot, outputPath, tempPath string) error {
+func GeneratePackage(assetsRoot, outputPath string) error {
 	assetsRoot = filepath.Clean(assetsRoot)
 	outputPath = filepath.Clean(outputPath)
 	os.Remove(outputPath)
@@ -132,12 +132,17 @@ func GeneratePackage(assetsRoot, outputPath, tempPath string) error {
 
 	localBaseName := filepath.Base(assetsRoot)
 
+	tempDir, err := ioutil.TempDir("", "temp")
+	if err != nil {
+		return err
+	}
+
 	for _, asset := range assets {
 		if strings.HasSuffix(asset.Path, ".meta") {
 			continue
 		}
 
-		assetDir := filepath.Join(tempPath, asset.Guid)
+		assetDir := filepath.Join(tempDir, asset.Guid)
 		assetPath := filepath.Join(assetDir, "asset")
 		metaPath := filepath.Join(assetDir, "asset.meta")
 		pathNamePath := filepath.Join(assetDir, "pathname")
@@ -182,7 +187,7 @@ func GeneratePackage(assetsRoot, outputPath, tempPath string) error {
 		}
 	}
 
-	if err = TarGz(outputPath, tempPath); err != nil {
+	if err = TarGz(outputPath, tempDir); err != nil {
 		return err
 	}
 

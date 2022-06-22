@@ -22,19 +22,8 @@ func main() {
 		return
 	}
 
-	tempDir, err := ioutil.TempDir("", "temp")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	md5Dir, err := ioutil.TempDir("", "md5")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
 	if err = utils.UnPackage(fileName,
-		unpackageDir, md5Dir); err != nil {
+		unpackageDir); err != nil {
 		fmt.Println(err)
 		return
 	}
@@ -48,7 +37,7 @@ func main() {
 	name := filepath.Base(fileName)
 	output := packageDir + name
 	if err = utils.GeneratePackage(assetDir,
-		output, tempDir); err != nil {
+		output); err != nil {
 		fmt.Println(err)
 		return
 	}

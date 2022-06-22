@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-func UnPackage(packagePath, output, tempPath string) error {
+func UnPackage(packagePath, output string) error {
 	//packagePath = filepath.Clean(packagePath)
 	// output = filepath.Clean(output)
 	// tempPath = filepath.Clean(tempPath)
@@ -28,7 +28,13 @@ func UnPackage(packagePath, output, tempPath string) error {
 	// 	return err
 	// }
 
-	tempDir, err := extractAll(packagePath, tempPath)
+	md5Dir, err := ioutil.TempDir("", "md5")
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	tempDir, err := extractAll(packagePath, md5Dir)
 	if err != nil {
 		fmt.Println("extractAll err", err)
 		return err
