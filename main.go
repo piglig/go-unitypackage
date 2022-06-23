@@ -3,20 +3,20 @@ package main
 import (
 	"fmt"
 	"go-unitypackage/utils"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 )
 
 func main() {
-	fileName := "D://test_unity//rw_en_resouce_1009.unitypackage"
+	fileName := "D://test_unity//111111.unitypackage"
 
-	unpackageDir, err := ioutil.TempDir("", "unpackage")
+	unpackageDir, err := os.MkdirTemp("", "unpackage")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	packageDir, err := ioutil.TempDir("", "package")
+	packageDir, err := os.MkdirTemp("", "package")
 	if err != nil {
 		fmt.Println(err)
 		return

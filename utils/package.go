@@ -22,8 +22,12 @@ type MetaFile struct {
 }
 
 func PreprocessAssets(assetsRoot string) error {
-	assetDir := filepath.Join(assetsRoot, "Assets")
+	assetDir := GetAssetsRootPath(assetsRoot)
 	return preProcessFilesInPath(assetDir, "./")
+}
+
+func GetAssetsRootPath(path string) string {
+	return filepath.Join(path, "Assets")
 }
 
 func preProcessFilesInPath(assetsRoot, relativePath string) error {
@@ -119,7 +123,7 @@ func getDeterministicGuid(relativeFilePath string) string {
 }
 
 func GeneratePackage(assetsRoot, outputPath string) error {
-	assetsRoot = filepath.Join(assetsRoot, "Assets")
+	assetsRoot = GetAssetsRootPath(assetsRoot)
 	outputPath = filepath.Clean(outputPath)
 	os.Remove(outputPath)
 	if err := os.MkdirAll(filepath.Dir(outputPath), 0777); err != nil {
@@ -133,7 +137,7 @@ func GeneratePackage(assetsRoot, outputPath string) error {
 
 	localBaseName := filepath.Base(assetsRoot)
 
-	tempDir, err := ioutil.TempDir("", "temp")
+	tempDir, err := os.MkdirTemp("", "temp")
 	if err != nil {
 		return err
 	}
