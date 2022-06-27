@@ -47,7 +47,9 @@ if err := utils.GeneratePackage("D://test_unity//temp_unpackage//Assets//",
 ```
 
 ## Command Line Access
-TODO
+```Golang
+go run main.go -p "D://test_unity//test.unitypackage"
+```
 
 
 

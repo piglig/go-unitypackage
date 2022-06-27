@@ -1,6 +1,21 @@
+/*
+Go-unitypackage compress and decompress .unitypackage
+
+Given a file path, it compress or decompress .unitypackage
+
+Usage:
+
+	go run main.go [flags] [path]
+
+The flags are:
+
+	-p
+		The .unitypackage file path
+*/
 package main
 
 import (
+	"flag"
 	"fmt"
 	"go-unitypackage/utils"
 	"os"
@@ -8,8 +23,10 @@ import (
 )
 
 func main() {
-	fileName := "D://test_unity//111111.unitypackage"
 
+	fileName := flag.String("p", "", ".unitypackage file path")
+	flag.Parse()
+	//"D://test_unity//111111.unitypackage"
 	unpackageDir, err := os.MkdirTemp("", "unpackage")
 	if err != nil {
 		fmt.Println(err)
@@ -22,7 +39,7 @@ func main() {
 		return
 	}
 
-	if err = utils.UnPackage(fileName,
+	if err = utils.UnPackage(*fileName,
 		unpackageDir); err != nil {
 		fmt.Println(err)
 		return
@@ -33,7 +50,7 @@ func main() {
 		return
 	}
 
-	name := filepath.Base(fileName)
+	name := filepath.Base(*fileName)
 	output := packageDir + name
 	if err = utils.GeneratePackage(unpackageDir,
 		output); err != nil {
