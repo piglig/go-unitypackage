@@ -39,7 +39,7 @@ It uses the last folder name in the path as the containing folder for the assets
 ```Golang
 utils.PreprocessAssets("D://test_unity//temp_unpackage//Assets//")
 if err := utils.GeneratePackage("D://test_unity//temp_unpackage//Assets//",
-    "D://test_unity//package//bard_en_test.unitypackage",
+    "D://test_unity//package//test.unitypackage",
     "D://test_unity//temp_unpackage//", "D://test_unity//temp_package//"); err != nil {
     fmt.Println(err)
     return
