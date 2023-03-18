@@ -55,3 +55,6 @@ go run main.go -p "D://test_unity//test.unitypackage"
 
 ## MetaFiles
 *.meta files will be generated if they do not exist for files & folders.
+
+## License
+See the [LICENSE](LICENSE) file for license rights and limitations (MIT).
