@@ -6,7 +6,6 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -29,7 +28,7 @@ func UnPackage(packagePath, output string) error {
 	// 	return err
 	// }
 
-	md5Dir, err := ioutil.TempDir("", "md5")
+	md5Dir, err := os.MkdirTemp("", "md5")
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -41,7 +40,7 @@ func UnPackage(packagePath, output string) error {
 		return err
 	}
 
-	dirs, err := ioutil.ReadDir(tempDir)
+	dirs, err := os.ReadDir(tempDir)
 	if err != nil {
 		return err
 	}
@@ -69,29 +68,24 @@ func UnPackage(packagePath, output string) error {
 				continue
 			}
 
-			pathNameByte, err := ioutil.ReadFile(pathNameFilePath)
+			pathNameByte, err := os.ReadFile(pathNameFilePath)
 			if err != nil {
 				fmt.Println("UnPackage ioutil.ReadFile err", err)
 				return err
 			}
 
-			pathName := string(pathNameByte)
-			pathName = strings.TrimSpace(pathName)
+			pathName := strings.TrimSpace(string(pathNameByte))
 			if runtime.GOOS == "windows" {
-				var re = regexp.MustCompile(`[>:"|?*]`)
-				pathName = re.ReplaceAllString(pathName, "_")
+				pathName = regexp.MustCompile(`[>:"|?*]`).ReplaceAllString(pathName, "_")
 			}
 
 			outputParent := filepath.Join(output, pathName)
-			fp := filepath.Dir(outputParent)
-			if _, err = os.Stat(fp); err != nil {
-				if os.IsNotExist(err) {
-					err = os.MkdirAll(fp, 0777)
-					if err != nil {
-						fmt.Println("UnPackage os.MkdirAll err", err)
-						return err
-					}
-				}
+			outputDir := filepath.Dir(outputParent)
+
+			err = os.MkdirAll(outputDir, 0777)
+			if err != nil {
+				fmt.Println("UnPackage os.MkdirAll err", err)
+				return err
 			}
 
 			if err = MoveFile(assetFilePath, outputParent); err != nil {
@@ -104,37 +98,40 @@ func UnPackage(packagePath, output string) error {
 	return nil
 }
 
-func MoveFile(sourcePath, destPath string) error {
+func MoveFile(sourcePath, dstPath string) error {
 	inputFile, err := os.Open(sourcePath)
 	if err != nil {
-		return fmt.Errorf("Couldn't open source file: %s", err)
+		return fmt.Errorf("couldn't open source file: %w", err)
 	}
-	outputFile, err := os.Create(destPath)
+	defer inputFile.Close()
+
+	outputFile, err := os.Create(dstPath)
 	if err != nil {
 		inputFile.Close()
-		return fmt.Errorf("Couldn't open dest file: %s", err)
+		return fmt.Errorf("couldn't open dst file: %w", err)
 	}
 	defer outputFile.Close()
+
 	_, err = io.Copy(outputFile, inputFile)
-	inputFile.Close()
 	if err != nil {
-		return fmt.Errorf("Writing to output file failed: %s", err)
+		return fmt.Errorf("writing to output file failed: %w", err)
 	}
 	// The copy was successful, so now delete the original file
 	err = os.Remove(sourcePath)
 	if err != nil {
-		return fmt.Errorf("Failed removing original file: %s", err)
+		return fmt.Errorf("failed removing original file: %w", err)
 	}
 	return nil
 }
 
 // Untar takes a destination path and a reader; a tar reader loops over the tarfile
 // creating the file structure at 'dst' along the way, and writing any files
-func extractAll(unityPackagePath, outputPath string) (string, error) {
+func extractAll(unityPackagePath, outputPath string) (output string, err error) {
 	unityPackage, err := os.Open(unityPackagePath)
 	if err != nil {
 		return "", err
 	}
+	defer unityPackage.Close()
 
 	gzr, err := gzip.NewReader(unityPackage)
 	if err != nil {
@@ -146,18 +143,14 @@ func extractAll(unityPackagePath, outputPath string) (string, error) {
 
 	for {
 		header, err := tr.Next()
-
 		switch {
-
 		// if no more files are found return
 		case err == io.EOF:
 			return outputPath, nil
-
 		// return any other error
 		case err != nil:
 			fmt.Println("extractAll err", err)
 			return "", err
-
 		// if the header is nil, just skip it (not sure how this happens)
 		case header == nil:
 			continue
@@ -166,8 +159,8 @@ func extractAll(unityPackagePath, outputPath string) (string, error) {
 		// the target location where the dir/file should be created
 		header.Name = filepath.Clean(header.Name)
 		target := header.Name
-		absFlag := true
-		if !filepath.IsAbs(header.Name) {
+		absFlag := filepath.IsAbs(header.Name)
+		if !absFlag {
 			absFlag = false
 			target = filepath.Join(outputPath, header.Name)
 		}
@@ -177,8 +170,7 @@ func extractAll(unityPackagePath, outputPath string) (string, error) {
 
 		// check the file type
 		switch header.Typeflag {
-
-		// if its a dir and it doesn't exist create it
+		// if it's a dir and doesn't exist create it
 		case tar.TypeDir:
 			if _, err = os.Stat(target); err != nil {
 				if err = os.MkdirAll(target, 0755); err != nil {
@@ -218,6 +210,7 @@ func extractAll(unityPackagePath, outputPath string) (string, error) {
 			} else {
 				// copy over contents
 				if _, err := io.Copy(f, tr); err != nil {
+					f.Close()
 					fmt.Println("extractAll tar.TypeReg io.Copy", err)
 					return "", err
 				}

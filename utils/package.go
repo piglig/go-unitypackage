@@ -9,7 +9,6 @@ import (
 	"errors"
 	"gopkg.in/yaml.v2"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -30,31 +29,24 @@ func GetAssetsRootPath(path string) string {
 	return filepath.Join(path, "Assets")
 }
 
-func preProcessFilesInPath(assetsRoot, relativePath string) error {
-	assetPath := filepath.Join(assetsRoot, relativePath)
+func preProcessFilesInPath(assetsRoot, relPath string) error {
+	assetPath := filepath.Join(assetsRoot, relPath)
 
 	// 处理根目录
-	if err := processFile(assetsRoot, relativePath); err != nil {
+	if err := processFile(assetsRoot, relPath); err != nil {
 		return err
 	}
 
 	// 处理内容
-	dirs, err := ioutil.ReadDir(assetPath)
+	files, err := os.ReadDir(assetPath)
 	if err != nil {
 		return err
 	}
 
-	for _, dir := range dirs {
-		childRelativePath := filepath.Join(relativePath, dir.Name())
-		childAbsPath := filepath.Join(assetsRoot, childRelativePath)
+	for _, file := range files {
+		childRelativePath := filepath.Join(relPath, file.Name())
 
-		info, err := os.Stat(childAbsPath)
-
-		if err != nil {
-			return err
-		}
-
-		if info.IsDir() {
+		if file.IsDir() {
 			if err = preProcessFilesInPath(assetsRoot, childRelativePath); err != nil {
 				return err
 			}
@@ -109,7 +101,7 @@ func generateMetafile(fullMetaFilePath, relativeFilePath string) error {
 
 	contents = strings.ReplaceAll(contents, "{guid}", getDeterministicGuid(relativeFilePath))
 
-	err := ioutil.WriteFile(fullMetaFilePath, []byte(contents), 0755)
+	err := os.WriteFile(fullMetaFilePath, []byte(contents), 0755)
 	if err != nil {
 		return err
 	}
@@ -125,7 +117,11 @@ func getDeterministicGuid(relativeFilePath string) string {
 func GeneratePackage(assetsRoot, outputPath string) error {
 	assetsRoot = GetAssetsRootPath(assetsRoot)
 	outputPath = filepath.Clean(outputPath)
-	os.Remove(outputPath)
+
+	if err := os.RemoveAll(outputPath); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
 	if err := os.MkdirAll(filepath.Dir(outputPath), 0777); err != nil {
 		return err
 	}
@@ -342,20 +338,15 @@ func collectAssetsInPath(assetPath string) ([]MetaFile, error) {
 		assets = append(assets, *assetRef)
 	}
 
-	dirs, err := ioutil.ReadDir(assetPath)
+	assetsFiles, err := os.ReadDir(assetPath)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, dir := range dirs {
-		fullPath := filepath.Join(assetPath, dir.Name())
+	for _, assetsFile := range assetsFiles {
+		fullPath := filepath.Join(assetPath, assetsFile.Name())
 
-		info, err := os.Stat(fullPath)
-		if err != nil {
-			return nil, err
-		}
-
-		if info.IsDir() {
+		if assetsFile.IsDir() {
 			subAssets, err := collectAssetsInPath(fullPath)
 			if err != nil {
 				return nil, err
@@ -384,7 +375,7 @@ func getAssetReference(filePath string) (*MetaFile, error) {
 	if info.IsDir() {
 		return nil, nil
 	} else {
-		content, err := ioutil.ReadFile(metaFilePath)
+		content, err := os.ReadFile(metaFilePath)
 		if err != nil {
 			return nil, err
 		}
