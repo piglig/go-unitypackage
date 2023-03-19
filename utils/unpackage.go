@@ -14,20 +14,6 @@ import (
 )
 
 func UnPackage(packagePath, output string) error {
-	//packagePath = filepath.Clean(packagePath)
-	// output = filepath.Clean(output)
-	// tempPath = filepath.Clean(tempPath)
-	//
-	// os.RemoveAll(output)
-	// if err := os.MkdirAll(output, 0777); err != nil {
-	// 	return err
-	// }
-	//
-	// os.RemoveAll(tempPath)
-	// if err := os.MkdirAll(tempPath, 0777); err != nil {
-	// 	return err
-	// }
-
 	md5Dir, err := os.MkdirTemp("", "md5")
 	if err != nil {
 		fmt.Println(err)
@@ -172,13 +158,10 @@ func extractAll(unityPackagePath, outputPath string) (output string, err error) 
 		switch header.Typeflag {
 		// if it's a dir and doesn't exist create it
 		case tar.TypeDir:
-			if _, err = os.Stat(target); err != nil {
-				if err = os.MkdirAll(target, 0755); err != nil {
-					fmt.Println("extractAll tar.TypeDir", err)
-					return "", err
-				}
+			if err = os.MkdirAll(target, 0755); err != nil {
+				fmt.Println("extractAll tar.TypeDir", err)
+				return "", err
 			}
-
 		// if it's a file create it
 		case tar.TypeReg:
 			f, err := os.OpenFile(target, os.O_CREATE|os.O_RDWR, os.FileMode(header.Mode))
@@ -197,12 +180,11 @@ func extractAll(unityPackagePath, outputPath string) (output string, err error) 
 				outputDir := filepath.Join(tempOutput, upDir)
 				tempOutput = filepath.Join(outputDir, fileBase)
 
-				if _, err = os.Stat(outputDir); err != nil {
-					if err = os.MkdirAll(outputDir, 0755); err != nil {
-						fmt.Println("extractAll tar.TypeReg os.MkdirAll", err)
-						return "", err
-					}
+				if err = os.MkdirAll(outputDir, 0755); err != nil {
+					fmt.Println("extractAll tar.TypeReg os.MkdirAll", err)
+					return "", err
 				}
+
 				if err = copyFile(target, tempOutput); err != nil {
 					fmt.Println("extractAll tar.TypeReg CopyFile", err)
 					return "", err
