@@ -113,11 +113,7 @@ func GeneratePackage(assetsRoot, outputPath string) error {
 	assetsRoot = GetAssetsRootPath(assetsRoot)
 	outputPath = filepath.Clean(outputPath)
 
-	if err := os.RemoveAll(outputPath); err != nil && !os.IsNotExist(err) {
-		return err
-	}
-
-	if err := os.MkdirAll(filepath.Dir(outputPath), 0777); err != nil {
+	if err := os.MkdirAll(outputPath, 0777); err != nil {
 		return err
 	}
 
