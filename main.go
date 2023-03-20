@@ -1,7 +1,7 @@
 /*
 Go-unitypackage compress and decompress .unitypackage
 
-Given a file path, it compress or decompress .unitypackage
+# Given a file path, it compress or decompress .unitypackage
 
 Usage:
 
@@ -41,11 +41,6 @@ func main() {
 
 	if err = utils.UnPackage(*fileName,
 		unpackageDir); err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	if err = utils.PreprocessAssets(unpackageDir); err != nil {
 		fmt.Println(err)
 		return
 	}

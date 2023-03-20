@@ -1,8 +1,6 @@
 package utils
 
 import (
-	"archive/tar"
-	"compress/gzip"
 	"crypto/md5"
 	_ "embed"
 	"encoding/hex"
@@ -21,16 +19,11 @@ type MetaFile struct {
 	MetaPath string `yaml:"-"`
 }
 
-// PreprocessAssets preprocesses the assets at the given assets root directory.
-func PreprocessAssets(assetsRoot string) error {
-	assetDir := GetAssetsRootPath(assetsRoot)
-	return preProcessFilesInPath(assetDir, "./")
-}
-
 func GetAssetsRootPath(path string) string {
 	return filepath.Join(path, "Assets")
 }
 
+// preProcessFilesInPath preprocesses the assets at the given assets root directory.
 func preProcessFilesInPath(assetsRoot, relPath string) error {
 	assetPath := filepath.Join(assetsRoot, relPath)
 	err := filepath.Walk(assetPath, func(path string, info fs.FileInfo, err error) error {
@@ -179,129 +172,8 @@ func GeneratePackage(assetsRoot, outputPath string) error {
 		}
 	}
 
-	if err = TarGz(outputPath, tempDir); err != nil {
+	if err = tarGz(outputPath, tempDir); err != nil {
 		return err
-	}
-
-	return nil
-}
-
-func TarGzWrite(_path, rootPath string, tw *tar.Writer, fi os.FileInfo) error {
-	_path = filepath.Clean(_path)
-	rootPath = filepath.Clean(rootPath)
-	relativePath, err := filepath.Rel(rootPath, _path)
-	if err != nil {
-		return err
-	}
-
-	fr, err := os.Open(_path)
-	if err != nil {
-		return err
-	}
-	defer fr.Close()
-
-	h := new(tar.Header)
-	h.Name = relativePath
-	h.Size = fi.Size()
-	h.Mode = int64(fi.Mode())
-	h.ModTime = fi.ModTime()
-
-	err = tw.WriteHeader(h)
-	if err != nil {
-		return err
-	}
-
-	_, err = io.Copy(tw, fr)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func IterDirectory(rootPath, dirPath string, tw *tar.Writer) error {
-	dir, err := os.Open(dirPath)
-	if err != nil {
-		return err
-	}
-	defer dir.Close()
-	fis, err := dir.Readdir(0)
-	if err != nil {
-		return err
-	}
-
-	for _, fi := range fis {
-		curPath := dirPath + "/" + fi.Name()
-
-		if fi.IsDir() {
-			if err = tarHeader(rootPath, curPath, tw); err != nil {
-				return err
-			}
-			if err = IterDirectory(rootPath, curPath, tw); err != nil {
-				return err
-			}
-		} else {
-			if err = TarGzWrite(curPath, rootPath, tw, fi); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
-func TarGz(outFilePath string, inPath string) error {
-	// file write
-	fw, err := os.Create(outFilePath)
-	if err != nil {
-		return err
-	}
-	defer fw.Close()
-
-	// gzip write
-	gw := gzip.NewWriter(fw)
-	defer gw.Close()
-
-	// tar write
-	tw := tar.NewWriter(gw)
-	defer tw.Close()
-
-	//re, err := filepath.Rel(inPath, inPath)
-	//if err != nil {
-	//	return err
-	//}
-	//fmt.Println(re)
-
-	if err = tarHeader(inPath, inPath, tw); err != nil {
-		return err
-	}
-
-	if err = IterDirectory(inPath, inPath, tw); err != nil {
-		return err
-	}
-	return err
-}
-
-func tarHeader(basePath, path string, tw *tar.Writer) error {
-	// 获取文件或目录信息
-	fi, err := os.Stat(path)
-	if err != nil {
-		return err
-	}
-	relativePath, err := filepath.Rel(basePath, path)
-	if err != nil {
-		return err
-	}
-
-	if len(relativePath) > 0 {
-		hdr, err := tar.FileInfoHeader(fi, "")
-		if err != nil {
-			return err
-		}
-
-		hdr.Name = relativePath
-		if err = tw.WriteHeader(hdr); err != nil {
-			return err
-		}
 	}
 
 	return nil

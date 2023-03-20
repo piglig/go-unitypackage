@@ -6,6 +6,7 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -13,17 +14,16 @@ import (
 	"strings"
 )
 
-func UnPackage(packagePath, output string) error {
+func UnPackage(packagePath, outputPath string) error {
 	md5Dir, err := os.MkdirTemp("", "md5")
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
+	defer os.RemoveAll(md5Dir)
 
 	tempDir, err := extractAll(packagePath, md5Dir)
 	if err != nil {
-		fmt.Println("extractAll err", err)
-		return err
+		return fmt.Errorf("extractAll %w", err)
 	}
 
 	dirs, err := os.ReadDir(tempDir)
@@ -56,8 +56,8 @@ func UnPackage(packagePath, output string) error {
 
 			pathNameByte, err := os.ReadFile(pathNameFilePath)
 			if err != nil {
-				fmt.Println("UnPackage ioutil.ReadFile err", err)
-				return err
+				return fmt.Errorf("UnPackage os.ReadFile %w", err)
+
 			}
 
 			pathName := strings.TrimSpace(string(pathNameByte))
@@ -65,49 +65,20 @@ func UnPackage(packagePath, output string) error {
 				pathName = regexp.MustCompile(`[>:"|?*]`).ReplaceAllString(pathName, "_")
 			}
 
-			outputParent := filepath.Join(output, pathName)
-			outputDir := filepath.Dir(outputParent)
-
-			err = os.MkdirAll(outputDir, 0777)
+			outputFile := filepath.Join(outputPath, pathName)
+			err = os.MkdirAll(filepath.Dir(outputFile), 0777)
 			if err != nil {
-				fmt.Println("UnPackage os.MkdirAll err", err)
-				return err
+				return fmt.Errorf("UnPackage os.MkdirAll %w", err)
 			}
 
-			if err = MoveFile(assetFilePath, outputParent); err != nil {
-				fmt.Println("UnPackage MoveFile err", err)
-				return err
+			if err = copyFile(assetFilePath, outputFile); err != nil {
+				return fmt.Errorf("UnPackage copyFile %w", err)
 			}
 		}
 	}
 
-	return nil
-}
-
-func MoveFile(sourcePath, dstPath string) error {
-	inputFile, err := os.Open(sourcePath)
-	if err != nil {
-		return fmt.Errorf("couldn't open source file: %w", err)
-	}
-	defer inputFile.Close()
-
-	outputFile, err := os.Create(dstPath)
-	if err != nil {
-		inputFile.Close()
-		return fmt.Errorf("couldn't open dst file: %w", err)
-	}
-	defer outputFile.Close()
-
-	_, err = io.Copy(outputFile, inputFile)
-	if err != nil {
-		return fmt.Errorf("writing to output file failed: %w", err)
-	}
-	// The copy was successful, so now delete the original file
-	err = os.Remove(sourcePath)
-	if err != nil {
-		return fmt.Errorf("failed removing original file: %w", err)
-	}
-	return nil
+	assetDir := GetAssetsRootPath(outputPath)
+	return preProcessFilesInPath(assetDir, "./")
 }
 
 // Untar takes a destination path and a reader; a tar reader loops over the tarfile
@@ -133,10 +104,8 @@ func extractAll(unityPackagePath, outputPath string) (output string, err error) 
 		// if no more files are found return
 		case err == io.EOF:
 			return outputPath, nil
-		// return any other error
 		case err != nil:
-			fmt.Println("extractAll err", err)
-			return "", err
+			return "", fmt.Errorf("extractAll err %w", err)
 		// if the header is nil, just skip it (not sure how this happens)
 		case header == nil:
 			continue
@@ -152,22 +121,20 @@ func extractAll(unityPackagePath, outputPath string) (output string, err error) 
 		}
 		target = filepath.Clean(target)
 
-		fmt.Println("target:", target, "header: ", header.Name)
+		log.Println("target:", target, "header: ", header.Name)
 
 		// check the file type
 		switch header.Typeflag {
 		// if it's a dir and doesn't exist create it
 		case tar.TypeDir:
 			if err = os.MkdirAll(target, 0755); err != nil {
-				fmt.Println("extractAll tar.TypeDir", err)
-				return "", err
+				return "", fmt.Errorf("extractAll tar.TypeDir %w", err)
 			}
 		// if it's a file create it
 		case tar.TypeReg:
 			f, err := os.OpenFile(target, os.O_CREATE|os.O_RDWR, os.FileMode(header.Mode))
 			if err != nil {
-				fmt.Println("extractAll tar.TypeReg", err)
-				return "", err
+				return "", fmt.Errorf("extractAll tar.TypeReg %w", err)
 			}
 
 			if absFlag {
@@ -181,20 +148,18 @@ func extractAll(unityPackagePath, outputPath string) (output string, err error) 
 				tempOutput = filepath.Join(outputDir, fileBase)
 
 				if err = os.MkdirAll(outputDir, 0755); err != nil {
-					fmt.Println("extractAll tar.TypeReg os.MkdirAll", err)
-					return "", err
+					return "", fmt.Errorf("extractAll tar.TypeReg os.MkdirAll %w", err)
 				}
 
 				if err = copyFile(target, tempOutput); err != nil {
-					fmt.Println("extractAll tar.TypeReg CopyFile", err)
-					return "", err
+					return "", fmt.Errorf("extractAll tar.TypeReg copyFile %w", err)
+
 				}
 			} else {
 				// copy over contents
 				if _, err := io.Copy(f, tr); err != nil {
 					f.Close()
-					fmt.Println("extractAll tar.TypeReg io.Copy", err)
-					return "", err
+					return "", fmt.Errorf("extractAll tar.TypeReg io.Copy %w", err)
 				}
 			}
 
