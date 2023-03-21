@@ -66,7 +66,7 @@ func tarGzWrite(basePath, filePath string, tw *tar.Writer, fi os.FileInfo) error
 		return err
 	}
 
-	fr, err := os.Open(filePath)
+	fr, err := os.Open(basePath)
 	if err != nil {
 		return err
 	}

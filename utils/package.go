@@ -106,7 +106,7 @@ func GeneratePackage(assetsRoot, outputPath string) error {
 	assetsRoot = GetAssetsRootPath(assetsRoot)
 	outputPath = filepath.Clean(outputPath)
 
-	if err := os.MkdirAll(outputPath, 0777); err != nil {
+	if err := os.MkdirAll(filepath.Dir(outputPath), 0777); err != nil {
 		return err
 	}
 
@@ -121,6 +121,8 @@ func GeneratePackage(assetsRoot, outputPath string) error {
 	if err != nil {
 		return err
 	}
+
+	defer os.RemoveAll(tempDir)
 
 	for _, asset := range assets {
 		if strings.HasSuffix(asset.Path, ".meta") {
