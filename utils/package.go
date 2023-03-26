@@ -97,6 +97,10 @@ func generateMetafile(fullMetaFilePath, relativeFilePath string) error {
 	return nil
 }
 
+func ddd() {
+
+}
+
 func getDeterministicGuid(relativeFilePath string) string {
 	hash := md5.Sum([]byte(relativeFilePath))
 	return hex.EncodeToString(hash[:])
