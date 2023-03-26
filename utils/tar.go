@@ -9,7 +9,6 @@ import (
 )
 
 func tarHeader(basePath, path string, tw *tar.Writer) error {
-	// 获取文件或目录信息
 	fi, err := os.Stat(path)
 	if err != nil {
 		return err
