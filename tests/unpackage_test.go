@@ -1,7 +1,7 @@
 package tests
 
 import (
-	"go-unitypackage/utils"
+	"go-unitypackage"
 	"os"
 	"path/filepath"
 	"testing"
@@ -25,7 +25,7 @@ func TestPackageExtract(t *testing.T) {
 
 	unityPath := filepath.Join(".", "test-data", "test.unitypackage")
 
-	err = utils.UnPackage(unityPath, dir)
+	err = main.UnPackage(unityPath, dir)
 	if err != nil {
 		t.Fatalf("Failed to unpackage unitypackage: %v", err)
 		return
@@ -64,7 +64,7 @@ func TestPackageExtractWithLeadingDots(t *testing.T) {
 
 	unityPath := filepath.Join(".", "test-data", "testLeadingDots.unitypackage")
 
-	err = utils.UnPackage(unityPath, dir)
+	err = main.UnPackage(unityPath, dir)
 	if err != nil {
 		t.Fatalf("Failed to unpackage unitypackage: %v", err)
 		return
@@ -109,7 +109,7 @@ func TestPackageExtractWithUnicodePath(t *testing.T) {
 
 	unityPath := filepath.Join(".", "test-data", "testo.unitypackage")
 
-	err = utils.UnPackage(unityPath, dir)
+	err = main.UnPackage(unityPath, dir)
 	if err != nil {
 		t.Fatalf("Failed to unpackage unitypackage: %v", err)
 		return

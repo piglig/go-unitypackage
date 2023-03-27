@@ -17,7 +17,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"go-unitypackage/utils"
 	"os"
 	"path/filepath"
 )
@@ -39,7 +38,7 @@ func main() {
 		return
 	}
 
-	if err = utils.UnPackage(*fileName,
+	if err = UnPackage(*fileName,
 		unpackageDir); err != nil {
 		fmt.Println(err)
 		return
@@ -47,7 +46,7 @@ func main() {
 
 	name := filepath.Base(*fileName)
 	output := packageDir + name
-	if err = utils.GeneratePackage(unpackageDir,
+	if err = GeneratePackage(unpackageDir,
 		output); err != nil {
 		fmt.Println(err)
 		return

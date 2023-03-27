@@ -1,5 +1,5 @@
 // Package utils implements utility unitypackage for unpackage or package
-package utils
+package main
 
 import (
 	"archive/tar"
