@@ -20,16 +20,14 @@ func tarHeader(basePath, path string, tw *tar.Writer) error {
 		return err
 	}
 
-	if len(relativePath) > 0 {
-		hdr, err := tar.FileInfoHeader(fi, "")
-		if err != nil {
-			return err
-		}
+	hdr, err := tar.FileInfoHeader(fi, "")
+	if err != nil {
+		return err
+	}
 
-		hdr.Name = relativePath
-		if err = tw.WriteHeader(hdr); err != nil {
-			return err
-		}
+	hdr.Name = relativePath
+	if err = tw.WriteHeader(hdr); err != nil {
+		return err
 	}
 
 	return nil
