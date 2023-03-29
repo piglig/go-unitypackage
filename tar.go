@@ -8,8 +8,9 @@ import (
 	"path/filepath"
 )
 
+// tarHeader creates and writes the header for a file or directory entry to a tar.Writer.
+// basePath is the root directory of the archive, path is the path of the file or directory entry.
 func tarHeader(basePath, path string, tw *tar.Writer) error {
-	// 获取文件或目录信息
 	fi, err := os.Stat(path)
 	if err != nil {
 		return err
@@ -34,6 +35,7 @@ func tarHeader(basePath, path string, tw *tar.Writer) error {
 	return nil
 }
 
+// tarGz creates a tar.gz archive at outFilePath containing the files and directories located at inPath.
 func tarGz(outFilePath string, inPath string) error {
 	// file write
 	fw, err := os.Create(outFilePath)
@@ -60,6 +62,8 @@ func tarGz(outFilePath string, inPath string) error {
 	return err
 }
 
+// tarGzWrite writes a file entry to a tar.Writer for the file at basePath with file info fi.
+// basePath is the root directory of the archive, filePath is the path of the file entry.
 func tarGzWrite(basePath, filePath string, tw *tar.Writer, fi os.FileInfo) error {
 	relativePath, err := filepath.Rel(filePath, basePath)
 	if err != nil {
@@ -90,6 +94,8 @@ func tarGzWrite(basePath, filePath string, tw *tar.Writer, fi os.FileInfo) error
 	return nil
 }
 
+// iterDirectory recursively iterates through a directory and its subdirectories, adding each file and directory to a tar.Writer.
+// rootPath is the path of the root directory of the archive, dirPath is the path of the current directory being iterated over.
 func iterDirectory(rootPath, dirPath string, tw *tar.Writer) error {
 	dir, err := os.Open(dirPath)
 	if err != nil {
