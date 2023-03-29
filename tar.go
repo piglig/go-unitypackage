@@ -80,13 +80,11 @@ func tarGzWrite(basePath, filePath string, tw *tar.Writer, fi os.FileInfo) error
 	h.Mode = int64(fi.Mode())
 	h.ModTime = fi.ModTime()
 
-	err = tw.WriteHeader(h)
-	if err != nil {
+	if err = tw.WriteHeader(h); err != nil {
 		return err
 	}
 
-	_, err = io.Copy(tw, fr)
-	if err != nil {
+	if _, err = io.Copy(tw, fr); err != nil {
 		return err
 	}
 	return nil
