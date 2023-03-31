@@ -13,10 +13,11 @@ import (
 	"strings"
 )
 
+// MetaFile the asset metafile
 type MetaFile struct {
-	Guid     string `yaml:"guid"`
-	Path     string `yaml:"-"`
-	MetaPath string `yaml:"-"`
+	Guid     string `yaml:"guid"` // a unique identifier for the asset
+	Path     string `yaml:"-"`    // the asset path
+	MetaPath string `yaml:"-"`    // the asset metafile path
 }
 
 // GetAssetsRootPath get Assets path from unpackage path
@@ -141,7 +142,6 @@ func GeneratePackage(assetsRoot, outputPath string) error {
 			pathNameLocal = strings.TrimPrefix(pathNameLocal, "/")
 		}
 
-		// 用 unity 相对路径 Assets/... 代替根路径
 		const DefaultUnityRootPath = "Assets/"
 		pathNameLocal = filepath.Join(localBaseName, pathNameLocal)
 		pathNameLocal = strings.ReplaceAll(pathNameLocal, "\\", "/")
@@ -159,13 +159,11 @@ func GeneratePackage(assetsRoot, outputPath string) error {
 		}
 
 		if !isDir(asset.Path) {
-			// 拷贝素材
 			if err = copyFile(asset.Path, assetPath); err != nil {
 				return err
 			}
 		}
 
-		// 拷贝元文件
 		if err = copyFile(asset.MetaPath, metaPath); err != nil {
 			return err
 		}
