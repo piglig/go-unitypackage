@@ -1,4 +1,4 @@
-module go-unitypackage
+module github.com/piglig/go-unitypackage/v1
 
 go 1.16
 

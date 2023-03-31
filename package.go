@@ -1,4 +1,4 @@
-package main
+package unitypackage
 
 import (
 	"crypto/md5"
