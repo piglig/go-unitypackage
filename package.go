@@ -19,6 +19,7 @@ type MetaFile struct {
 	MetaPath string `yaml:"-"`
 }
 
+// GetAssetsRootPath get Assets path from unpackage path
 func GetAssetsRootPath(path string) string {
 	return filepath.Join(path, "Assets")
 }
