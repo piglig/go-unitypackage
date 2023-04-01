@@ -20,8 +20,8 @@ type MetaFile struct {
 	MetaPath string `yaml:"-"`    // the asset metafile path
 }
 
-// GetAssetsRootPath get Assets path from unpackage path
-func GetAssetsRootPath(path string) string {
+// getAssetsRootPath get Assets path from unpackage path
+func getAssetsRootPath(path string) string {
 	return filepath.Join(path, "Assets")
 }
 
@@ -105,7 +105,7 @@ func getDeterministicGuid(relativeFilePath string) string {
 }
 
 func GeneratePackage(assetsRoot, outputPath string) error {
-	assetsRoot = GetAssetsRootPath(assetsRoot)
+	assetsRoot = getAssetsRootPath(assetsRoot)
 	outputPath = filepath.Clean(outputPath)
 
 	if err := os.MkdirAll(filepath.Dir(outputPath), 0777); err != nil {

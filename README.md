@@ -1,13 +1,16 @@
 # go-unitypackage
+[![GoDoc](https://godoc.org/github.com/piglig/go-unitypackage?status.svg)](https://pkg.go.dev/github.com/piglig/go-unitypackage)
+[![Go Report Card](https://goreportcard.com/badge/github.com/piglig/go-unitypackage)](https://goreportcard.com/report/github.com/piglig/go-unitypackage)
 
-## About
-
+## Overview
 pack and unpack *.unitypackage files, with Golang
 
-
+## Installation
+```go
+go get github.com/piglig/go-unitypackage
+```
 
 ## How to use
-
 ### UnPackage
 Given the following setup:
 ```
@@ -50,11 +53,6 @@ if err := utils.GeneratePackage("D://test_unity//temp_unpackage//Assets//",
 ```Golang
 go run main.go -p "D://test_unity//test.unitypackage"
 ```
-
-
-
-## MetaFiles
-*.meta files will be generated if they do not exist for files & folders.
 
 ## License
 See the [LICENSE](LICENSE) file for license rights and limitations (MIT).
