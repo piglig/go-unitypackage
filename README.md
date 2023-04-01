@@ -12,40 +12,39 @@ go get github.com/piglig/go-unitypackage
 
 ## How to use
 ### UnPackage
-Given the following setup:
-```
-D://test_unity//package//test.unitypackage
-```
+```go
+package main
 
-The command will extract content from unitypackage.
+import "github.com/piglig/go-unitypackage"
 
-```Golang
-err := utils.UnPackage("D://test_unity//package//test.unitypackage",
-    "D://test_unity//temp_unpackage//", "D://test_unity//temp//")
-if err != nil {
-    fmt.Println(err)
+func main() {
+	// the unitypackage path
+	packagePath := "D:\\test_unity\\test.unitypackage"
+	// the output assets path
+	assetsPath := "D:\\test_unity"
+	// Unpackage command will extract content from unitypackage.
+	err := unitypackage.UnPackage(packagePath, assetsPath)
+	if err != nil {
+		return
+	}
 }
 ```
-
 ### Package
-Given the following setup:
-```
-D://test_unity//temp_unpackage//Assets//
-D://test_unity//temp_unpackage//Assets//code.dll
-D://test_unity//temp_unpackage//Assets//object.prefab
-D://test_unity//temp_unpackage//Assets//code.dll.mbd
-```
-
-The command will generate a package that installs the content of "D://test_unity//temp_unpackage//Assets//" into "Assets/content/".
-It uses the last folder name in the path as the containing folder for the assets.
-
 ```Golang
-utils.PreprocessAssets("D://test_unity//temp_unpackage//Assets//")
-if err := utils.GeneratePackage("D://test_unity//temp_unpackage//Assets//",
-    "D://test_unity//package//test.unitypackage",
-    "D://test_unity//temp_unpackage//", "D://test_unity//temp_package//"); err != nil {
-    fmt.Println(err)
-    return
+package main
+
+import "github.com/piglig/go-unitypackage"
+
+func main() {
+	// the assets directory
+	assetsPath := "D:\\test_unity"
+	// the output unitypackage path
+	packagePath := "D:\\test_unity\\package\\output.unitypackage"
+	// GeneratePackage command will generate a package from assets directory
+	err := unitypackage.GeneratePackage(assetsPath, packagePath)
+	if err != nil {
+		return
+	}
 }
 ```
 
