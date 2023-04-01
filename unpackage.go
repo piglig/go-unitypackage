@@ -77,7 +77,7 @@ func UnPackage(packagePath, outputPath string) error {
 		}
 	}
 
-	assetDir := GetAssetsRootPath(outputPath)
+	assetDir := getAssetsRootPath(outputPath)
 	return preProcessFilesInPath(assetDir, "./")
 }
 
