@@ -13,8 +13,8 @@ import (
 	"strings"
 )
 
-// MetaFile the asset metafile
-type MetaFile struct {
+// metaFile the asset metafile
+type metaFile struct {
 	Guid     string `yaml:"guid"` // a unique identifier for the asset
 	Path     string `yaml:"-"`    // the asset path
 	MetaPath string `yaml:"-"`    // the asset metafile path
@@ -58,15 +58,15 @@ func preProcessFilesInPath(assetsRoot, relPath string) error {
 
 func processFile(assetsRoot, relativeFilePath string) error {
 	fullFilePath := filepath.Join(assetsRoot, relativeFilePath)
-	fullMetaFilePath := getAssetMetaPath(fullFilePath)
+	fullmetaFilePath := getAssetMetaPath(fullFilePath)
 
-	_, err := os.Stat(fullMetaFilePath)
+	_, err := os.Stat(fullmetaFilePath)
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return err
 	}
 
 	if errors.Is(err, os.ErrNotExist) {
-		return generateMetafile(fullMetaFilePath, relativeFilePath)
+		return generateMetafile(fullmetaFilePath, relativeFilePath)
 	}
 
 	return nil
@@ -83,7 +83,7 @@ func getAssetMetaPath(filePath string) string {
 var metafileTemplate []byte
 
 // // generateMetafile generates a metafile for the given file.
-func generateMetafile(fullMetaFilePath, relativeFilePath string) error {
+func generateMetafile(fullmetaFilePath, relativeFilePath string) error {
 	metafile := make([]byte, len(metafileTemplate))
 	copy(metafile, metafileTemplate)
 
@@ -91,7 +91,7 @@ func generateMetafile(fullMetaFilePath, relativeFilePath string) error {
 
 	contents = strings.ReplaceAll(contents, "{guid}", getDeterministicGuid(relativeFilePath))
 
-	err := os.WriteFile(fullMetaFilePath, []byte(contents), 0755)
+	err := os.WriteFile(fullmetaFilePath, []byte(contents), 0755)
 	if err != nil {
 		return err
 	}
@@ -194,8 +194,8 @@ func isDir(path string) bool {
 	}
 }
 
-func collectAssetsInPath(assetPath string) ([]MetaFile, error) {
-	assets := make([]MetaFile, 0)
+func collectAssetsInPath(assetPath string) ([]metaFile, error) {
+	assets := make([]metaFile, 0)
 
 	err := filepath.Walk(assetPath, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
@@ -219,7 +219,7 @@ func collectAssetsInPath(assetPath string) ([]MetaFile, error) {
 	return assets, nil
 }
 
-func getAssetReference(filePath string) (*MetaFile, error) {
+func getAssetReference(filePath string) (*metaFile, error) {
 	metaFilePath := getAssetMetaPath(filePath)
 
 	info, err := os.Stat(metaFilePath)
@@ -235,7 +235,7 @@ func getAssetReference(filePath string) (*MetaFile, error) {
 			return nil, err
 		}
 
-		res := MetaFile{
+		res := metaFile{
 			Path:     filePath,
 			MetaPath: metaFilePath,
 		}
