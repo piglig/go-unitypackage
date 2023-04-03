@@ -58,15 +58,15 @@ func preProcessFilesInPath(assetsRoot, relPath string) error {
 
 func processFile(assetsRoot, relativeFilePath string) error {
 	fullFilePath := filepath.Join(assetsRoot, relativeFilePath)
-	fullmetaFilePath := getAssetMetaPath(fullFilePath)
+	fullMetaFilePath := getAssetMetaPath(fullFilePath)
 
-	_, err := os.Stat(fullmetaFilePath)
+	_, err := os.Stat(fullMetaFilePath)
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return err
 	}
 
 	if errors.Is(err, os.ErrNotExist) {
-		return generateMetafile(fullmetaFilePath, relativeFilePath)
+		return generateMetafile(fullMetaFilePath, relativeFilePath)
 	}
 
 	return nil
@@ -83,7 +83,7 @@ func getAssetMetaPath(filePath string) string {
 var metafileTemplate []byte
 
 // // generateMetafile generates a metafile for the given file.
-func generateMetafile(fullmetaFilePath, relativeFilePath string) error {
+func generateMetafile(fullMetaFilePath, relativeFilePath string) error {
 	metafile := make([]byte, len(metafileTemplate))
 	copy(metafile, metafileTemplate)
 
@@ -91,12 +91,7 @@ func generateMetafile(fullmetaFilePath, relativeFilePath string) error {
 
 	contents = strings.ReplaceAll(contents, "{guid}", getDeterministicGuid(relativeFilePath))
 
-	err := os.WriteFile(fullmetaFilePath, []byte(contents), 0755)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return os.WriteFile(fullMetaFilePath, []byte(contents), 0755)
 }
 
 func getDeterministicGuid(relativeFilePath string) string {
