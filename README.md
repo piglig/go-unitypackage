@@ -49,7 +49,7 @@ func main() {
 }
 ```
 
-## CLI
+## Command Line Tool
 **go-unitypackage** command line tool to package or unpackage the unitypackage.
 ### Installation
 In order to use the tool, compile it using the following command
