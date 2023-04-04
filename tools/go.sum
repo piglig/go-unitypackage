@@ -1,5 +1,5 @@
-github.com/piglig/go-unitypackage v1.0.2 h1:e8dP1I/Teq06vV9XqhhD2Dc31ckgKNQfrkRGB+QQ0DA=
-github.com/piglig/go-unitypackage v1.0.2/go.mod h1:PQpi2GCXEMueHAempiK8N6dHy4kL1JzJEeq6Z3G5RSM=
+github.com/piglig/go-unitypackage v1.0.3 h1:9qx+1PPXiP4qABk4jUiqpL3ftkmqFXCQ/yBB85viS2A=
+github.com/piglig/go-unitypackage v1.0.3/go.mod h1:PQpi2GCXEMueHAempiK8N6dHy4kL1JzJEeq6Z3G5RSM=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/yaml.v2 v2.4.0 h1:D8xgwECY7CYvx+Y2n4sBz93Jn9JRvxdiyyo8CTfuKaY=
