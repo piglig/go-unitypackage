@@ -81,7 +81,7 @@ func UnPackage(packagePath, outputPath string) error {
 	return preProcessFilesInPath(assetDir, "./")
 }
 
-// Untar takes a destination path and a reader; a tar reader loops over the tarfile
+// extractAll takes a destination path and a reader; a tar reader loops over the tarfile
 // creating the file structure at 'dst' along the way, and writing any files
 func extractAll(unityPackagePath, outputPath string) (output string, err error) {
 	unityPackage, err := os.Open(unityPackagePath)

@@ -26,24 +26,23 @@ func TestPackageExtract(t *testing.T) {
 	}
 
 	got := isDir(dir)
-	want := true
-	if got != want {
-		t.Errorf("got %v, wanted %v", got, want)
+	if !got {
+		t.Errorf("dir %s got %v", dir, got)
 	}
 
-	got = isDir(filepath.Join(dir, "Assets"))
-	want = true
-	if got != want {
-		t.Errorf("got %v, wanted %v", got, want)
+	assetsDir := filepath.Join(dir, "Assets")
+	got = isDir(assetsDir)
+	if !got {
+		t.Errorf("dir %s got %v", assetsDir, got)
 	}
 
-	got = !isDir(filepath.Join(dir, "Assets", "test.txt"))
-	want = true
-	if got != want {
-		t.Errorf("got %v, wanted %v", got, want)
+	txtFilePath := filepath.Join(dir, "Assets", "test.txt")
+	got = !isDir(txtFilePath)
+	if !got {
+		t.Errorf("file %s got %v", txtFilePath, got)
 	}
 
-	data, err := os.ReadFile(filepath.Join(dir, "Assets", "test.txt"))
+	data, err := os.ReadFile(txtFilePath)
 	if string(data) != "testing" {
 		t.Errorf("got %v, wanted %v", string(data), "testing")
 	}
@@ -65,27 +64,25 @@ func TestPackageExtractWithLeadingDots(t *testing.T) {
 	}
 
 	got := isDir(dir)
-	want := true
-	if got != want {
-		t.Errorf("got %v, wanted %v", got, want)
+	if !got {
+		t.Errorf("dir %s got %v", dir, got)
 	}
 
-	got = isDir(filepath.Join(dir, "Assets"))
-	want = true
-	if got != want {
-		t.Errorf("got %v, wanted %v", got, want)
+	assetsDir := filepath.Join(dir, "Assets")
+	got = isDir(assetsDir)
+	if !got {
+		t.Errorf("dir %s got %v", assetsDir, got)
 	}
 
-	got = !isDir(filepath.Join(dir, "Assets", "test.txt"))
-	want = true
-	if got != want {
-		t.Errorf("got %v, wanted %v", got, want)
+	txtFilePath := filepath.Join(dir, "Assets", "test.txt")
+	got = !isDir(txtFilePath)
+	if !got {
+		t.Errorf("file %s got %v", txtFilePath, got)
 	}
 
-	txtPath := filepath.Join(dir, "Assets", "test.txt")
-	data, err := os.ReadFile(txtPath)
+	data, err := os.ReadFile(txtFilePath)
 	if err != nil {
-		t.Errorf("Failed to read file %s, err %v", txtPath, err)
+		t.Errorf("Failed to read file %s, err %v", txtFilePath, err)
 		return
 	}
 
