@@ -30,13 +30,13 @@ func TestPackageExtract(t *testing.T) {
 		t.Errorf("dir %s got %v", dir, got)
 	}
 
-	assetsDir := filepath.Join(dir, "Assets")
+	assetsDir := filepath.Join(dir, DefaultUnityRootPath)
 	got = isDir(assetsDir)
 	if !got {
 		t.Errorf("dir %s got %v", assetsDir, got)
 	}
 
-	txtFilePath := filepath.Join(dir, "Assets", "test.txt")
+	txtFilePath := filepath.Join(dir, DefaultUnityRootPath, "test.txt")
 	got = !isDir(txtFilePath)
 	if !got {
 		t.Errorf("file %s got %v", txtFilePath, got)
@@ -68,13 +68,13 @@ func TestPackageExtractWithLeadingDots(t *testing.T) {
 		t.Errorf("dir %s got %v", dir, got)
 	}
 
-	assetsDir := filepath.Join(dir, "Assets")
+	assetsDir := filepath.Join(dir, DefaultUnityRootPath)
 	got = isDir(assetsDir)
 	if !got {
 		t.Errorf("dir %s got %v", assetsDir, got)
 	}
 
-	txtFilePath := filepath.Join(dir, "Assets", "test.txt")
+	txtFilePath := filepath.Join(dir, DefaultUnityRootPath, "test.txt")
 	got = !isDir(txtFilePath)
 	if !got {
 		t.Errorf("file %s got %v", txtFilePath, got)

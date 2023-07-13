@@ -20,9 +20,11 @@ type metaFile struct {
 	MetaPath string `yaml:"-"`    // the asset metafile path
 }
 
+const DefaultUnityRootPath = "Assets"
+
 // getAssetsRootPath get Assets path from unpackage path
 func getAssetsRootPath(path string) string {
-	return filepath.Join(path, "Assets")
+	return filepath.Join(path, DefaultUnityRootPath)
 }
 
 // preProcessFilesInPath preprocesses the assets at the given assets root directory.
@@ -132,12 +134,8 @@ func GeneratePackage(assetsRoot, outputPath string) error {
 		pathNamePath := filepath.Join(assetDir, "pathname")
 		pathNameLocal := strings.ReplaceAll(asset.Path, assetsRoot, "")
 		pathNameLocal = strings.ReplaceAll(pathNameLocal, ".meta", "")
+		pathNameLocal = strings.TrimPrefix(pathNameLocal, "/")
 
-		if strings.HasPrefix(pathNameLocal, "/") {
-			pathNameLocal = strings.TrimPrefix(pathNameLocal, "/")
-		}
-
-		const DefaultUnityRootPath = "Assets/"
 		pathNameLocal = filepath.Join(localBaseName, pathNameLocal)
 		pathNameLocal = strings.ReplaceAll(pathNameLocal, "\\", "/")
 
