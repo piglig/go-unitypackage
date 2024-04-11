@@ -27,11 +27,6 @@ func getAssetsRootPath(path string) string {
 	return filepath.Join(path, DefaultUnityRootPath)
 }
 
-// PreprocessAssets preprocesses the assets at the given assets root directory.
-func PreprocessAssets(assetsRoot string) error {
-	return preProcessFilesInPath(assetsRoot, ".")
-}
-
 // preProcessFilesInPath preprocesses the assets at the given assets root directory.
 func preProcessFilesInPath(assetsRoot, relPath string) error {
 	assetPath := filepath.Join(assetsRoot, relPath)
