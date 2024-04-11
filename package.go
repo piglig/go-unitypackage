@@ -5,7 +5,7 @@ import (
 	_ "embed"
 	"encoding/hex"
 	"errors"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 	"io"
 	"io/fs"
 	"os"
