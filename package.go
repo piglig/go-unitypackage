@@ -95,7 +95,6 @@ func generateMetafile(fullMetaFilePath, relativeFilePath string) error {
 	copy(metafile, metafileTemplate)
 
 	contents := string(metafile)
-
 	contents = strings.ReplaceAll(contents, "{guid}", getDeterministicGuid(relativeFilePath))
 
 	return os.WriteFile(fullMetaFilePath, []byte(contents), 0755)
@@ -119,28 +118,24 @@ func GeneratePackage(assetsRoot, outputPath string) error {
 		return err
 	}
 
-	localBaseName := filepath.Base(assetsRoot)
-
 	tempDir, err := os.MkdirTemp("", "temp")
 	if err != nil {
 		return err
 	}
-
 	defer os.RemoveAll(tempDir)
 
+	localBaseName := filepath.Base(assetsRoot)
 	for _, asset := range assets {
 		if strings.HasSuffix(asset.Path, ".meta") {
 			continue
 		}
 
 		assetDir := filepath.Join(tempDir, asset.Guid)
-		assetPath := filepath.Join(assetDir, "asset")
-		metaPath := filepath.Join(assetDir, "asset.meta")
-		pathNamePath := filepath.Join(assetDir, "pathname")
+		assetPath, metaPath, pathNamePath := prepareAssetPaths(assetDir)
+
 		pathNameLocal := strings.ReplaceAll(asset.Path, assetsRoot, "")
 		pathNameLocal = strings.ReplaceAll(pathNameLocal, ".meta", "")
 		pathNameLocal = strings.TrimPrefix(pathNameLocal, "/")
-
 		pathNameLocal = filepath.Join(localBaseName, pathNameLocal)
 		pathNameLocal = strings.ReplaceAll(pathNameLocal, "\\", "/")
 
@@ -178,18 +173,21 @@ func GeneratePackage(assetsRoot, outputPath string) error {
 	return nil
 }
 
+// prepareAssetPaths prepares file paths for the asset's content.
+func prepareAssetPaths(assetDir string) (assetPath, metaPath, pathNamePath string) {
+	assetPath = filepath.Join(assetDir, "asset")
+	metaPath = filepath.Join(assetDir, "asset.meta")
+	pathNamePath = filepath.Join(assetDir, "pathname")
+	return
+}
+
 func isDir(path string) bool {
 	info, err := os.Stat(path)
-
 	if err != nil {
 		return false
 	}
 
-	if info.IsDir() {
-		return true
-	} else {
-		return false
-	}
+	return info.IsDir()
 }
 
 func collectAssetsInPath(assetPath string) ([]metaFile, error) {

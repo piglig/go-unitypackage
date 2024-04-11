@@ -1,4 +1,4 @@
-// Package utils implements utility unitypackage for unpackage or package
+// Package unitypackage implements utility unitypackage for unpackage or package
 package unitypackage
 
 import (
@@ -32,53 +32,46 @@ func UnPackage(packagePath, outputPath string) error {
 	}
 
 	for _, dir := range dirs {
-		if dir.IsDir() {
-			pathNameFilePath := filepath.Join(tempDir, dir.Name())
-			assetFilePath := pathNameFilePath
-			if runtime.GOOS == "windows" {
-				pathNameFilePath = filepath.Join(pathNameFilePath, "pathname")
-			} else {
-				pathNameFilePath = filepath.Join(pathNameFilePath, "pathname")
-			}
+		if !dir.IsDir() {
+			continue
+		}
 
-			if _, err = os.Stat(pathNameFilePath); err != nil {
-				continue
-			}
-
-			if runtime.GOOS == "windows" {
-				assetFilePath = filepath.Join(assetFilePath, "asset")
-			} else {
-				assetFilePath = filepath.Join(assetFilePath, "asset")
-			}
-			if _, err = os.Stat(assetFilePath); err != nil {
-				continue
-			}
-
-			pathNameByte, err := os.ReadFile(pathNameFilePath)
-			if err != nil {
-				return fmt.Errorf("UnPackage os.ReadFile %w", err)
-
-			}
-
-			pathName := strings.TrimSpace(string(pathNameByte))
-			if runtime.GOOS == "windows" {
-				pathName = regexp.MustCompile(`[>:"|?*]`).ReplaceAllString(pathName, "_")
-			}
-
-			outputFile := filepath.Join(outputPath, pathName)
-			err = os.MkdirAll(filepath.Dir(outputFile), 0777)
-			if err != nil {
-				return fmt.Errorf("UnPackage os.MkdirAll %w", err)
-			}
-
-			if err = copyFile(assetFilePath, outputFile); err != nil {
-				return fmt.Errorf("UnPackage copyFile %w", err)
-			}
+		if err = processDirectory(tempDir, dir.Name(), outputPath); err != nil {
+			return err
 		}
 	}
 
 	assetDir := getAssetsRootPath(outputPath)
 	return preProcessFilesInPath(assetDir, "./")
+}
+
+func processDirectory(baseDir, dirName, outputPath string) error {
+	pathNameFilePath := filepath.Join(baseDir, dirName, "pathname")
+	if _, err := os.Stat(pathNameFilePath); err != nil {
+		return nil // Skip if pathname does not exist
+	}
+
+	assetFilePath := filepath.Join(baseDir, dirName, "asset")
+	if _, err := os.Stat(assetFilePath); err != nil {
+		return nil // Skip if asset does not exist
+	}
+
+	pathNameByte, err := os.ReadFile(pathNameFilePath)
+	if err != nil {
+		return fmt.Errorf("processDirectory os.ReadFile: %w", err)
+	}
+
+	pathName := sanitizePathName(string(pathNameByte))
+	outputFile := filepath.Join(outputPath, pathName)
+	if err = os.MkdirAll(filepath.Dir(outputFile), 0777); err != nil {
+		return fmt.Errorf("processDirectory os.MkdirAll: %w", err)
+	}
+
+	if err = copyFile(assetFilePath, outputFile); err != nil {
+		return fmt.Errorf("processDirectory copyFile: %w", err)
+	}
+
+	return nil
 }
 
 // extractAll takes a destination path and a reader; a tar reader loops over the tarfile
@@ -166,4 +159,13 @@ func extractAll(unityPackagePath, outputPath string) (output string, err error) 
 			f.Close()
 		}
 	}
+}
+
+// sanitizePathName standard the pathname
+func sanitizePathName(pathName string) string {
+	pathName = strings.TrimSpace(pathName)
+	if runtime.GOOS == "windows" {
+		pathName = regexp.MustCompile(`[>:"|?*]`).ReplaceAllString(pathName, "_")
+	}
+	return pathName
 }
