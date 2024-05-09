@@ -41,8 +41,7 @@ func UnPackage(packagePath, outputPath string) error {
 		}
 	}
 
-	assetDir := getAssetsRootPath(outputPath)
-	return preProcessFilesInPath(assetDir, "./")
+	return nil
 }
 
 func processDirectory(baseDir, dirName, outputPath string) error {

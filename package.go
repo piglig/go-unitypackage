@@ -101,15 +101,14 @@ func getDeterministicGuid(relativeFilePath string) string {
 }
 
 func GeneratePackage(assetsRoot, outputPath string) error {
+	assetsRoot = getAssetsRootPath(assetsRoot)
 	err := preprocessFilesInPath(assetsRoot, ".")
 	if err != nil {
 		return err
 	}
 
-	assetsRoot = getAssetsRootPath(assetsRoot)
 	outputPath = filepath.Clean(outputPath)
-
-	if err := os.MkdirAll(filepath.Dir(outputPath), 0777); err != nil {
+	if err := os.MkdirAll(filepath.Dir(outputPath), 0755); err != nil {
 		return err
 	}
 
